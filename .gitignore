@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.log
+
+# Dados persistidos pelo servidor
+/data/*.json
+/data/*.bak
+/data/*.tmp
