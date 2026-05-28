@@ -23,6 +23,22 @@ export function usesShiftFlatRate(settings: Pick<AppSettings, 'shiftFlatRate'>):
   return settings.shiftFlatRate > 0;
 }
 
+export function resolveShiftWeekendFlatRate(
+  settings: Pick<AppSettings, 'shiftFlatRate' | 'shiftWeekendFlatRate'>
+): number {
+  if (settings.shiftFlatRate <= 0) return 0;
+  return settings.shiftWeekendFlatRate > 0
+    ? settings.shiftWeekendFlatRate
+    : settings.shiftFlatRate * 2;
+}
+
+/** Dia útil e fim de semana com o mesmo valor fixo por dia de plantão. */
+export function shiftPlantaoRatesEqual(
+  settings: Pick<AppSettings, 'shiftFlatRate' | 'shiftWeekendFlatRate'>
+): boolean {
+  return resolveShiftWeekendFlatRate(settings) === settings.shiftFlatRate;
+}
+
 export function resolveHourlyRate(
   settings: Pick<AppSettings, 'payHourlyRate' | 'payMonthlySalary' | 'payMonthlyHours'>
 ): number {
@@ -138,10 +154,7 @@ export function computeShiftFlatAmount(
   settings: AppSettings
 ): number {
   if (settings.shiftFlatRate <= 0) return 0;
-  const weekendRate =
-    settings.shiftWeekendFlatRate > 0
-      ? settings.shiftWeekendFlatRate
-      : settings.shiftFlatRate * 2;
+  const weekendRate = resolveShiftWeekendFlatRate(settings);
   // Feriado em dia útil: valor do plantão normal. Feriado no fim de semana já entra em weekendDays.
   return weekdayDays * settings.shiftFlatRate + weekendDays * weekendRate + holidayDays * settings.shiftFlatRate;
 }
@@ -210,6 +223,36 @@ export function computePeriodPay(
   };
 }
 
+/** Plantão manual por valor fixo: dia útil, sáb/dom e feriado (mesma regra do período). */
+export function computeManualShiftFlatPay(
+  settings: AppSettings,
+  weekdayDays: number,
+  weekendDays: number,
+  holidayDays: number
+): { hourlyRate: number; amount: number; multiplier: number; label: string } {
+  const hourlyRate = resolveHourlyRate(settings);
+  const wd = Math.max(0, Math.round(weekdayDays));
+  const we = Math.max(0, Math.round(weekendDays));
+  const hol = Math.max(0, Math.round(holidayDays));
+  const amount = computeShiftFlatAmount(wd, we, hol, settings);
+  const weekendRate = resolveShiftWeekendFlatRate(settings);
+  const samePlantaoRate = shiftPlantaoRatesEqual(settings);
+  const parts: string[] = [];
+  if (samePlantaoRate && wd > 0 && we === 0) {
+    parts.push(`${wd}× plantão (sáb-dom) ${formatBRL(settings.shiftFlatRate)}`);
+  } else {
+    if (wd > 0) parts.push(`${wd}× plantão ${formatBRL(settings.shiftFlatRate)}`);
+    if (we > 0) parts.push(`${we}× sáb/dom ${formatBRL(weekendRate)}`);
+  }
+  if (hol > 0) parts.push(`${hol}× feriado ${formatBRL(settings.shiftFlatRate)}`);
+  return {
+    hourlyRate,
+    multiplier: 0,
+    amount,
+    label: parts.length ? parts.join(' · ') : '0 dias na escala',
+  };
+}
+
 export function computeManualPay(
   minutes: number,
   kind: PayKind,
@@ -220,21 +263,10 @@ export function computeManualPay(
   const hourlyRate = resolveHourlyRate(settings);
 
   if (kind === 'shift' && usesShiftFlatRate(settings)) {
-    const rate =
-      shiftKind === 'weekend'
-        ? settings.shiftWeekendFlatRate > 0
-          ? settings.shiftWeekendFlatRate
-          : settings.shiftFlatRate * 2
-        : settings.shiftFlatRate;
-    const days = Math.max(1, shiftDays);
-    const kindLabel =
-      shiftKind === 'holiday' ? 'feriado' : shiftKind === 'weekend' ? 'fim de semana' : 'plantão';
-    return {
-      hourlyRate,
-      multiplier: 0,
-      amount: rate * days,
-      label: `${days} dia(s) ${kindLabel} × ${formatBRL(rate)}`,
-    };
+    const wd = shiftKind === 'weekday' ? shiftDays : 0;
+    const we = shiftKind === 'weekend' ? shiftDays : 0;
+    const hol = shiftKind === 'holiday' ? shiftDays : 0;
+    return computeManualShiftFlatPay(settings, wd, we, hol);
   }
 
   const multiplier = kind === 'overtime' ? settings.overtimeMultiplier : settings.shiftMultiplier;
