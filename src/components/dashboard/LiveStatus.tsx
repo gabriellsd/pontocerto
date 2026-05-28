@@ -18,7 +18,39 @@ interface LiveInfo {
   expected: number;
 }
 
-function computeLive(employee: Employee, dayLogs: PointLog[]): LiveInfo {
+function toMinutes(time?: string): number | null {
+  if (!time) return null;
+  const [h, m] = time.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+}
+
+function nowMinutes(now: Date): number {
+  return now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+}
+
+function diffPositive(start: number | null, end: number | null): number {
+  if (start === null || end === null) return 0;
+  return Math.max(0, end - start);
+}
+
+function computeWorkedMinutesLive(dayLogs: PointLog[], now: Date): number {
+  const ent = toMinutes(dayLogs.find((l) => l.type === 'Entrada')?.time);
+  const alS = toMinutes(dayLogs.find((l) => l.type === 'Saída Almoço')?.time);
+  const alR = toMinutes(dayLogs.find((l) => l.type === 'Retorno Almoço')?.time);
+  const sai = toMinutes(dayLogs.find((l) => l.type === 'Saída')?.time);
+  if (ent === null) return 0;
+
+  if (sai !== null) return computeWorkedMinutes(dayLogs, false);
+
+  if (alS === null) return diffPositive(ent, nowMinutes(now));
+
+  const morning = diffPositive(ent, alS);
+  if (alR === null) return morning;
+  return morning + diffPositive(alR, nowMinutes(now));
+}
+
+function computeLive(employee: Employee, dayLogs: PointLog[], now: Date): LiveInfo {
   const ent = dayLogs.find((l) => l.type === 'Entrada')?.time;
   const alS = dayLogs.find((l) => l.type === 'Saída Almoço')?.time;
   const alR = dayLogs.find((l) => l.type === 'Retorno Almoço')?.time;
@@ -37,14 +69,14 @@ function computeLive(employee: Employee, dayLogs: PointLog[]): LiveInfo {
     const worked = computeWorkedMinutes(dayLogs, false);
     return { phase: 'lunch', remaining: Math.max(0, expected - worked), worked, expected };
   }
-  const worked = computeWorkedMinutes(dayLogs, true);
+  const worked = computeWorkedMinutesLive(dayLogs, now);
   return { phase: 'working', remaining: Math.max(0, expected - worked), worked, expected };
 }
 
 export function LiveStatus({ employee, dayLogs, now, isToday }: LiveStatusProps) {
   // `now` é dep para forçar re-cálculo a cada segundo (computeWorkedMinutes(...,true)
   // usa internamente Date.now() para fechar o intervalo aberto até "agora").
-  const info = useMemo(() => computeLive(employee, dayLogs), [employee, dayLogs, now]);
+  const info = useMemo(() => computeLive(employee, dayLogs, now), [employee, dayLogs, now]);
   if (!isToday) return null;
 
   const { phase, remaining, worked, expected } = info;

@@ -39,15 +39,16 @@ export default function App() {
   const { user, isGuest, loading } = useAuth();
   if (loading) return <AuthLoading />;
   if (!user && !isGuest) return <LoginScreen />;
-  return <PontoApp userId={user?.uid ?? null} userEmail={user?.email ?? 'Convidado'} />;
+  return <PontoApp userId={user?.uid ?? null} userEmail={user?.email ?? 'Convidado'} isGuest={isGuest} />;
 }
 
 interface PontoAppProps {
   userId: string | null;
   userEmail: string | null;
+  isGuest: boolean;
 }
 
-function PontoApp({ userId, userEmail }: PontoAppProps) {
+function PontoApp({ userId, userEmail, isGuest }: PontoAppProps) {
   const { signOut } = useAuth();
   const now = useClock();
   const webcam = useWebcam();
@@ -420,6 +421,7 @@ function PontoApp({ userId, userEmail }: PontoAppProps) {
         onToggleTheme={toggleDarkMode}
         onGoHome={handleGoHome}
         onSignOut={signOut}
+        accountName={isGuest ? 'Convidado' : currentEmployee.name}
         currentEmployee={currentEmployee}
         onOpenSettings={setActiveTab}
         syncStatus={syncStatus}

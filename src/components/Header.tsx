@@ -8,6 +8,7 @@ interface HeaderProps {
   onToggleTheme: () => void;
   onGoHome: () => void;
   onSignOut: () => Promise<void>;
+  accountName?: string;
   currentEmployee?: Employee;
   onOpenSettings: (tab: TabId) => void;
   syncStatus: SyncStatus;
@@ -19,6 +20,7 @@ export function Header({
   onToggleTheme,
   onGoHome,
   onSignOut,
+  accountName,
   currentEmployee,
   onOpenSettings,
   syncStatus,
@@ -65,10 +67,10 @@ export function Header({
             className="flex items-center gap-1.5 sm:gap-2 border-l border-slate-200 dark:border-slate-700 pl-1.5 sm:pl-2 group cursor-pointer"
           >
             <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-brand-500/30 transition">
-              {currentEmployee?.name.charAt(0) ?? 'U'}
+              {(accountName ?? currentEmployee?.name)?.charAt(0) ?? 'U'}
             </div>
             <span className="hidden lg:block text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[140px]">
-              {currentEmployee?.name ?? 'Utilizador'}
+              {accountName ?? currentEmployee?.name ?? 'Utilizador'}
             </span>
             <SettingsIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition hidden lg:block" />
           </button>
