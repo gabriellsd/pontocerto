@@ -196,68 +196,67 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
             />
           </div>
 
-          {includeOvertime || (includeShift && !flatShift) ? (
-            <div className="grid grid-cols-2 sm:max-w-xs gap-2">
-                <label className="block space-y-0.5">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Horas</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={999}
-                    value={manualHours || ''}
-                    onChange={(e) => setManualHours(Math.max(0, parseInt(e.target.value, 10) || 0))}
-                    className="ponto-input"
-                  />
-                </label>
-                <label className="block space-y-0.5">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400">Minutos</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={59}
-                    value={manualMinutes || ''}
-                    onChange={(e) =>
-                      setManualMinutes(Math.min(59, Math.max(0, parseInt(e.target.value, 10) || 0)))
+          {includeOvertime || (includeShift && !flatShift) || (includeShift && flatShift) ? (
+            <div className="grid grid-cols-2 gap-2">
+              {includeOvertime || (includeShift && !flatShift) ? (
+                <>
+                  <ManualNumberField
+                    label="Horas"
+                    hint={
+                      includeOvertime
+                        ? `×${settings.overtimeMultiplier}`
+                        : `×${settings.shiftMultiplier}`
                     }
-                    className="ponto-input"
+                    value={manualHours}
+                    max={999}
+                    onChange={setManualHours}
                   />
-                </label>
-            </div>
-          ) : null}
-
-          {includeShift && flatShift ? (
-            <div
-              className={`grid grid-cols-1 gap-2 ${samePlantaoRate ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}
-            >
-                {samePlantaoRate ? (
-                  <ShiftDayField
-                    label="Plantão (sáb-dom)"
-                    sub={formatBRL(settings.shiftFlatRate)}
-                    value={manualShiftRegular}
-                    onChange={setManualShiftRegular}
+                  <ManualNumberField
+                    label="Minutos"
+                    hint={hourlyRate > 0 ? `${formatBRL(hourlyRate)}/h` : undefined}
+                    value={manualMinutes}
+                    max={59}
+                    onChange={(n) => setManualMinutes(Math.min(59, n))}
                   />
-                ) : (
-                  <>
-                    <ShiftDayField
-                      label="Plantão (dia útil)"
-                      sub={formatBRL(settings.shiftFlatRate)}
-                      value={manualShiftWeekday}
-                      onChange={setManualShiftWeekday}
+                </>
+              ) : null}
+              {includeShift && flatShift ? (
+                <>
+                  {samePlantaoRate ? (
+                    <ManualNumberField
+                      label="Plantão (sáb-dom)"
+                      hint={`${formatBRL(settings.shiftFlatRate)}/dia`}
+                      value={manualShiftRegular}
+                      max={31}
+                      onChange={setManualShiftRegular}
                     />
-                    <ShiftDayField
-                      label="Sábado / domingo"
-                      sub={formatBRL(settings.shiftWeekendFlatRate)}
-                      value={manualShiftWeekend}
-                      onChange={setManualShiftWeekend}
-                    />
-                  </>
-                )}
-                <ShiftDayField
-                  label="Feriado (dia útil)"
-                  sub={formatBRL(settings.shiftFlatRate)}
-                  value={manualShiftHoliday}
-                  onChange={setManualShiftHoliday}
-                />
+                  ) : (
+                    <>
+                      <ManualNumberField
+                        label="Plantão (dia útil)"
+                        hint={`${formatBRL(settings.shiftFlatRate)}/dia`}
+                        value={manualShiftWeekday}
+                        max={31}
+                        onChange={setManualShiftWeekday}
+                      />
+                      <ManualNumberField
+                        label="Sábado / domingo"
+                        hint={`${formatBRL(settings.shiftWeekendFlatRate)}/dia`}
+                        value={manualShiftWeekend}
+                        max={31}
+                        onChange={setManualShiftWeekend}
+                      />
+                    </>
+                  )}
+                  <ManualNumberField
+                    label="Feriado (dia útil)"
+                    hint={`${formatBRL(settings.shiftFlatRate)}/dia`}
+                    value={manualShiftHoliday}
+                    max={31}
+                    onChange={setManualShiftHoliday}
+                  />
+                </>
+              ) : null}
             </div>
           ) : null}
 
@@ -312,28 +311,30 @@ function ModeBtn({
   );
 }
 
-function ShiftDayField({
+function ManualNumberField({
   label,
-  sub,
+  hint,
   value,
   onChange,
+  max = 999,
 }: {
   label: string;
-  sub: string;
+  hint?: string;
   value: number;
   onChange: (n: number) => void;
+  max?: number;
 }) {
   return (
     <label className="block space-y-0.5 p-2 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40">
       <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 block leading-tight">{label}</span>
-      <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{sub}/dia</span>
+      {hint ? <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{hint}</span> : null}
       <input
         type="number"
         min={0}
-        max={31}
+        max={max}
         value={value || ''}
         onChange={(e) => onChange(Math.max(0, parseInt(e.target.value, 10) || 0))}
-        className="ponto-input mt-1"
+        className="ponto-input mt-1 w-full"
       />
     </label>
   );
