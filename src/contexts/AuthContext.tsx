@@ -8,9 +8,10 @@ import {
   type ReactNode,
 } from 'react';
 import {
-  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
   signOut as firebaseSignOut,
   type User,
 } from 'firebase/auth';
@@ -20,8 +21,7 @@ interface AuthContextValue {
   user: User | null;
   loading: boolean;
   configured: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -44,12 +44,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, [configured]);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    await signInWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
-  }, []);
-
-  const signUp = useCallback(async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(getFirebaseAuth(), email.trim(), password);
+  const signInWithGoogle = useCallback(async () => {
+    const auth = getFirebaseAuth();
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      const code = (err as { code?: string })?.code ?? '';
+      // Em alguns navegadores mobile, popup é bloqueado: cai para redirect.
+      if (code === 'auth/popup-blocked' || code === 'auth/cancelled-popup-request') {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+      throw err;
+    }
   }, []);
 
   const signOut = useCallback(async () => {
@@ -57,8 +65,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, configured, signIn, signUp, signOut }),
-    [user, loading, configured, signIn, signUp, signOut]
+    () => ({ user, loading, configured, signInWithGoogle, signOut }),
+    [user, loading, configured, signInWithGoogle, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
