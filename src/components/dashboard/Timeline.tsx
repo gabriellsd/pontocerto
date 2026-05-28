@@ -209,7 +209,7 @@ export function Timeline({
   const allEmpty = steps.every((s) => s.state !== 'filled');
 
   return (
-    <div className="bg-white dark:bg-slate-800 px-3 sm:px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
+    <div className="bg-white dark:bg-slate-800 px-2.5 sm:px-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <h2 className="text-xs sm:text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wide">
           {isToday ? 'Registo de Ponto' : 'Marcações do Dia'}
@@ -246,7 +246,7 @@ export function Timeline({
         </p>
       )}
 
-      <div className="space-y-0">
+      <div className="space-y-0 min-w-0">
           {steps.map((step, idx) => {
             const next = steps[idx + 1];
             const segment =
@@ -383,7 +383,7 @@ function StepRow({
   }
 
   return (
-    <div className="flex gap-2.5 group">
+    <div className="flex gap-2 group min-w-0">
       <div className="flex flex-col items-center w-9 shrink-0">
         {!isFirst && <div className={`w-px h-1.5 ${connectorTopCls}`} aria-hidden />}
         <button
@@ -439,10 +439,10 @@ function StepRow({
         {!isLast && <div className={`flex-1 w-px min-h-[0.5rem] ${connectorBottomCls}`} aria-hidden />}
       </div>
 
-      <div className="flex-1 pt-0.5 pb-1 min-w-0">
+      <div className="flex-1 pt-0.5 pb-1 min-w-0 overflow-hidden">
         <div className="flex items-baseline gap-2 flex-wrap">
           {state === 'filled' && log ? (
-            <span className="font-mono text-base font-bold text-slate-800 dark:text-white">
+            <span className="font-mono text-sm sm:text-base font-bold text-slate-800 dark:text-white">
               {log.time}
             </span>
           ) : suggested ? (
@@ -462,7 +462,7 @@ function StepRow({
             </span>
           )}
           <span
-            className={`text-xs uppercase tracking-wide font-semibold ${
+            className={`text-[11px] sm:text-xs uppercase tracking-wide font-semibold ${
               state === 'future'
                 ? 'text-slate-300 dark:text-slate-600'
                 : 'text-slate-500 dark:text-slate-400'

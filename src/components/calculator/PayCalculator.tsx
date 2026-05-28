@@ -72,7 +72,7 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-3 sm:p-4 space-y-3">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
             <Calculator className="w-4 h-4" />
@@ -93,7 +93,7 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
           </div>
         </div>
 
-        <div className="flex p-0.5 bg-slate-100 dark:bg-slate-900/60 rounded-lg self-start sm:self-auto">
+        <div className="flex p-0.5 bg-slate-100 dark:bg-slate-900/60 rounded-lg self-start lg:self-auto">
           <ModeBtn active={mode === 'period'} onClick={() => setMode('period')}>
             Período
           </ModeBtn>

@@ -55,7 +55,7 @@ export function StatsBar({
   }, [allLogs, employee.id, employee.weekdaysOnly, employee.dailyMinutes, holidaySet, todayStr]);
 
   return (
-    <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+    <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-1.5 sm:gap-3">
       <StatCard
         icon={<Briefcase className="w-4 h-4" />}
         iconCls={
@@ -129,7 +129,7 @@ function StatCard({ icon, iconCls, label, fullLabel, value, valueCls, tooltip }:
       title={tooltip}
       className="bg-white dark:bg-slate-800 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-1.5 sm:gap-2 min-w-0"
     >
-      <div className={`hidden sm:flex p-1.5 rounded-lg shrink-0 ${iconCls}`}>{icon}</div>
+      <div className={`flex p-1 rounded-lg shrink-0 ${iconCls}`}>{icon}</div>
       <div className="min-w-0 flex-1">
         <span className="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 block font-medium leading-tight uppercase tracking-wide truncate">
           <span className="sm:hidden">{label}</span>

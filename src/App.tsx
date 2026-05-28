@@ -426,7 +426,7 @@ function PontoApp({ userId, userEmail }: PontoAppProps) {
         lastSyncedAt={lastSyncedAt}
       />
 
-      <main className="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6">
+      <main className="flex-grow w-full max-w-[96rem] mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 lg:py-6">
         <Tabs active={activeTab} onChange={setActiveTab} />
 
         {activeTab === 'dashboard' && (

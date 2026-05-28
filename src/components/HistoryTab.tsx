@@ -151,7 +151,7 @@ export function HistoryTab({
 
   return (
     <div className="space-y-4" role="tabpanel">
-      <div className="bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+      <div className="bg-white dark:bg-slate-800 p-3 sm:p-5 lg:p-6 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold text-slate-800 dark:text-white">Folha de Ponto</h2>
@@ -159,12 +159,13 @@ export function HistoryTab({
               Período de competência: {describePayPeriod(payPeriodConfig)} · Exibindo: {formatDateBR(activeRange.start)} a {formatDateBR(activeRange.end)}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div className="w-full sm:w-auto">
+            <div className="flex flex-nowrap sm:flex-wrap items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
             <button
               type="button"
               onClick={onExportPDF}
               aria-label="Exportar folha de ponto em PDF"
-              className="flex items-center justify-center space-x-2 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition shadow-sm"
+              className="shrink-0 flex items-center justify-center space-x-2 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-lg transition shadow-sm"
             >
               <FileText className="w-4 h-4" />
               <span>Exportar PDF</span>
@@ -173,7 +174,7 @@ export function HistoryTab({
               type="button"
               onClick={onExportCSV}
               aria-label="Exportar histórico em CSV"
-              className="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white text-xs font-bold rounded-lg transition"
+              className="shrink-0 flex items-center justify-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white text-xs font-bold rounded-lg transition"
             >
               <Download className="w-4 h-4" />
               <span>Exportar CSV</span>
@@ -182,14 +183,14 @@ export function HistoryTab({
               type="button"
               onClick={onExportBackup}
               aria-label="Exportar backup JSON"
-              className="flex items-center justify-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white text-xs font-bold rounded-lg transition"
+              className="shrink-0 flex items-center justify-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white text-xs font-bold rounded-lg transition"
             >
               <Save className="w-4 h-4" />
               <span>Backup</span>
             </button>
             <label
               htmlFor="import-input"
-              className="cursor-pointer flex items-center justify-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white text-xs font-bold rounded-lg transition"
+              className="shrink-0 cursor-pointer flex items-center justify-center space-x-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-white text-xs font-bold rounded-lg transition"
             >
               <Upload className="w-4 h-4" />
               <span>Importar</span>
@@ -205,10 +206,11 @@ export function HistoryTab({
                 e.target.value = '';
               }}
             />
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl">
+        <div className="flex flex-wrap items-center gap-2 p-2.5 sm:p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl">
           <Filter className="w-5 h-5 text-slate-400" />
           <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Filtrar período:</span>
           <div className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
@@ -349,12 +351,12 @@ export function HistoryTab({
                   </button>
                 </th>
                 <th className="py-2 px-3">Entrada</th>
-                <th className="py-2 px-3">Início Almoço</th>
-                <th className="py-2 px-3">Fim Almoço</th>
+                <th className="py-2 px-3 hidden lg:table-cell">Início Almoço</th>
+                <th className="py-2 px-3 hidden lg:table-cell">Fim Almoço</th>
                 <th className="py-2 px-3">Saída</th>
                 <th className="py-2 px-3">Total Horas</th>
                 <th className="py-2 px-3">Banco de Horas</th>
-                <th className="py-2 px-2 text-right w-24">Notas</th>
+                <th className="py-2 px-2 text-right w-24 hidden xl:table-cell">Notas</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700 text-[11px]">
@@ -426,14 +428,19 @@ export function HistoryTab({
                             </span>
                           )}
                         </div>
+                        {notes && (
+                          <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400 max-w-[12rem] truncate xl:hidden" title={notes}>
+                            {notes}
+                          </div>
+                        )}
                       </td>
                       <td className="py-2 px-3 font-mono font-medium text-slate-600 dark:text-slate-400">
                         {ent ? ent.time : '--:--'}
                       </td>
-                      <td className="py-2 px-3 font-mono text-slate-500 dark:text-slate-400">
+                      <td className="py-2 px-3 font-mono text-slate-500 dark:text-slate-400 hidden lg:table-cell">
                         {almS ? almS.time : '--:--'}
                       </td>
-                      <td className="py-2 px-3 font-mono text-slate-500 dark:text-slate-400">
+                      <td className="py-2 px-3 font-mono text-slate-500 dark:text-slate-400 hidden lg:table-cell">
                         {almR ? almR.time : '--:--'}
                       </td>
                       <td className="py-2 px-3 font-mono font-medium text-slate-600 dark:text-slate-400">
@@ -468,7 +475,7 @@ export function HistoryTab({
                           <span className="text-slate-300 dark:text-slate-600 font-mono">--</span>
                         )}
                       </td>
-                      <td className="py-2 px-2 text-right w-24">
+                      <td className="py-2 px-2 text-right w-24 hidden xl:table-cell">
                         {notes ? (
                           <span
                             className="text-xs text-slate-500 max-w-[7rem] truncate block ml-auto"
@@ -491,7 +498,11 @@ export function HistoryTab({
                   <td className="py-2 px-3 text-[11px] text-slate-500 dark:text-slate-400 uppercase">
                     Total do período
                   </td>
-                  <td colSpan={4} className="py-2 px-3 text-xs text-slate-500 dark:text-slate-400">
+                  <td colSpan={4} className="py-2 px-3 text-xs text-slate-500 dark:text-slate-400 hidden lg:table-cell">
+                    {uniqueDates.length} dia(s) trabalhado(s) · Esperado:{' '}
+                    <span className="font-mono">{formatHM(monthTotals.expected)}</span>
+                  </td>
+                  <td colSpan={2} className="py-2 px-3 text-xs text-slate-500 dark:text-slate-400 lg:hidden">
                     {uniqueDates.length} dia(s) trabalhado(s) · Esperado:{' '}
                     <span className="font-mono">{formatHM(monthTotals.expected)}</span>
                   </td>
@@ -513,7 +524,7 @@ export function HistoryTab({
                       {formatSigned(monthTotals.balance)}
                     </span>
                   </td>
-                  <td className="py-2 px-2 w-24" />
+                  <td className="py-2 px-2 w-24 hidden xl:table-cell" />
                 </tr>
               </tfoot>
             )}

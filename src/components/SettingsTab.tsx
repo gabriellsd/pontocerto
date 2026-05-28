@@ -68,7 +68,7 @@ export function SettingsTab(props: SettingsTabProps) {
 
   return (
     <div role="tabpanel" className="space-y-3">
-      <div className="flex flex-col lg:flex-row lg:items-start gap-3 lg:gap-0 lg:bg-white lg:dark:bg-slate-800 lg:rounded-2xl lg:border lg:border-slate-200 lg:dark:border-slate-700 lg:shadow-sm lg:overflow-hidden">
+      <div className="flex flex-col lg:flex-row lg:items-start gap-2 sm:gap-3 lg:gap-0 lg:bg-white lg:dark:bg-slate-800 lg:rounded-2xl lg:border lg:border-slate-200 lg:dark:border-slate-700 lg:shadow-sm lg:overflow-hidden">
         <nav
           className="shrink-0 lg:w-52 xl:w-56 lg:border-r lg:border-slate-200 lg:dark:border-slate-700 lg:p-3"
           aria-label="Secções de definições"
@@ -84,7 +84,7 @@ export function SettingsTab(props: SettingsTabProps) {
           </div>
 
           <div
-            className="flex lg:flex-col gap-1 overflow-x-auto pb-0.5 lg:pb-0 -mx-1 px-1 lg:mx-0 lg:px-0 scrollbar-thin"
+            className="flex lg:flex-col gap-1 overflow-x-auto pb-1 lg:pb-0 -mx-1 px-1 lg:mx-0 lg:px-0 scrollbar-thin"
             role="tablist"
             aria-orientation="vertical"
           >
@@ -97,7 +97,7 @@ export function SettingsTab(props: SettingsTabProps) {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setPanel(id)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition shrink-0 lg:shrink lg:w-full ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition shrink-0 lg:shrink lg:w-full min-w-fit ${
                     active
                       ? 'bg-brand-600 text-white shadow-sm lg:bg-brand-50 lg:dark:bg-brand-950/40 lg:text-brand-700 lg:dark:text-brand-300 lg:shadow-none'
                       : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hover:bg-slate-100 lg:dark:hover:bg-slate-700/60'
@@ -111,7 +111,7 @@ export function SettingsTab(props: SettingsTabProps) {
           </div>
         </nav>
 
-        <div className="flex-1 min-w-0 lg:p-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+        <div className="flex-1 min-w-0 lg:p-3 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto">
           {panel === 'account' && (
             <AccountSection userEmail={props.userEmail} onSignOut={props.onSignOut} />
           )}

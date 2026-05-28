@@ -26,7 +26,7 @@ export function Header({
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-200">
-      <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-12 sm:h-14 flex items-center justify-between">
+      <div className="relative max-w-[96rem] mx-auto px-2 sm:px-4 md:px-6 lg:px-8 h-[clamp(3rem,6vw,3.5rem)] flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={onGoHome}
@@ -37,16 +37,16 @@ export function Header({
           <div className="bg-brand-600 text-white p-1.5 rounded-lg shadow-md shadow-brand-500/20">
             <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-brand-600 to-blue-500 bg-clip-text text-transparent">
+          <span className="text-sm sm:text-lg font-bold bg-gradient-to-r from-brand-600 to-blue-500 bg-clip-text text-transparent">
             PontoCerto
           </span>
         </button>
 
-        <div className="absolute left-1/2 -translate-x-1/2">
+        <div className="hidden md:block absolute left-1/2 -translate-x-1/2">
           <SyncBadge status={syncStatus} lastSyncedAt={lastSyncedAt} />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
             onClick={onToggleTheme}
@@ -62,7 +62,7 @@ export function Header({
             onClick={() => onOpenSettings('settings')}
             aria-label="Abrir configurações do perfil"
             title="Abrir configurações"
-            className="flex items-center gap-2 border-l border-slate-200 dark:border-slate-700 pl-2 group cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2 border-l border-slate-200 dark:border-slate-700 pl-1.5 sm:pl-2 group cursor-pointer"
           >
             <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-brand-500/30 transition">
               {currentEmployee?.name.charAt(0) ?? 'U'}
