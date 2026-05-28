@@ -1,4 +1,4 @@
-import { Clock, Moon, Settings as SettingsIcon, Sun } from 'lucide-react';
+import { Clock, LogOut, Moon, Settings as SettingsIcon, Sun } from 'lucide-react';
 import type { Employee, TabId } from '../types';
 import { SyncBadge } from './SyncBadge';
 import type { SyncStatus } from '../hooks/usePontoState';
@@ -7,6 +7,7 @@ interface HeaderProps {
   isDarkMode: boolean;
   onToggleTheme: () => void;
   onGoHome: () => void;
+  onSignOut: () => Promise<void>;
   currentEmployee?: Employee;
   onOpenSettings: (tab: TabId) => void;
   syncStatus: SyncStatus;
@@ -17,6 +18,7 @@ export function Header({
   isDarkMode,
   onToggleTheme,
   onGoHome,
+  onSignOut,
   currentEmployee,
   onOpenSettings,
   syncStatus,
@@ -24,7 +26,7 @@ export function Header({
 }: HeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-200">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-12 sm:h-14 flex items-center justify-between">
+      <div className="relative max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-12 sm:h-14 flex items-center justify-between">
         <button
           type="button"
           onClick={onGoHome}
@@ -40,9 +42,11 @@ export function Header({
           </span>
         </button>
 
-        <div className="flex items-center gap-2">
+        <div className="absolute left-1/2 -translate-x-1/2">
           <SyncBadge status={syncStatus} lastSyncedAt={lastSyncedAt} />
+        </div>
 
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={onToggleTheme}
@@ -63,10 +67,20 @@ export function Header({
             <div className="w-7 h-7 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm shrink-0 group-hover:ring-2 group-hover:ring-brand-500/30 transition">
               {currentEmployee?.name.charAt(0) ?? 'U'}
             </div>
-            <span className="hidden sm:block text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[140px]">
+            <span className="hidden lg:block text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[140px]">
               {currentEmployee?.name ?? 'Utilizador'}
             </span>
-            <SettingsIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition hidden sm:block" />
+            <SettingsIcon className="w-4 h-4 text-slate-400 dark:text-slate-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition hidden lg:block" />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => void onSignOut()}
+            aria-label="Sair da conta"
+            title="Sair"
+            className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+          >
+            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

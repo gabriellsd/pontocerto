@@ -19,16 +19,30 @@ import { getFirebaseAuth, isFirebaseConfigured } from '../firebase/config';
 
 interface AuthContextValue {
   user: User | null;
+  isGuest: boolean;
   loading: boolean;
   configured: boolean;
   signInWithGoogle: () => Promise<void>;
+  continueAsGuest: () => void;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const GUEST_MODE_KEY = 'pontocerto_guest_mode';
+
+function shouldPreferRedirectFlow(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  // Browser embutido do Cursor costuma bloquear/encerrar popups OAuth.
+  return /CursorBrowser|Cursor/i.test(ua);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    if (typeof localStorage === 'undefined') return false;
+    return localStorage.getItem(GUEST_MODE_KEY) === '1';
+  });
   const [loading, setLoading] = useState(true);
   const configured = isFirebaseConfigured();
 
@@ -40,13 +54,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const auth = getFirebaseAuth();
     return onAuthStateChanged(auth, (next) => {
       setUser(next);
+      if (next) {
+        setIsGuest(false);
+        localStorage.removeItem(GUEST_MODE_KEY);
+      }
       setLoading(false);
     });
   }, [configured]);
 
   const signInWithGoogle = useCallback(async () => {
+    setIsGuest(false);
+    localStorage.removeItem(GUEST_MODE_KEY);
     const auth = getFirebaseAuth();
     const provider = new GoogleAuthProvider();
+    if (shouldPreferRedirectFlow()) {
+      await signInWithRedirect(auth, provider);
+      return;
+    }
     try {
       await signInWithPopup(auth, provider);
     } catch (err) {
@@ -60,13 +84,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const signOut = useCallback(async () => {
-    await firebaseSignOut(getFirebaseAuth());
+  const continueAsGuest = useCallback(() => {
+    setIsGuest(true);
+    localStorage.setItem(GUEST_MODE_KEY, '1');
   }, []);
 
+  const signOut = useCallback(async () => {
+    if (isGuest) {
+      setIsGuest(false);
+      localStorage.removeItem(GUEST_MODE_KEY);
+      return;
+    }
+    await firebaseSignOut(getFirebaseAuth());
+  }, [isGuest]);
+
   const value = useMemo(
-    () => ({ user, loading, configured, signInWithGoogle, signOut }),
-    [user, loading, configured, signInWithGoogle, signOut]
+    () => ({ user, isGuest, loading, configured, signInWithGoogle, continueAsGuest, signOut }),
+    [user, isGuest, loading, configured, signInWithGoogle, continueAsGuest, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

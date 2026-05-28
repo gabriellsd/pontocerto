@@ -36,14 +36,14 @@ import { normalizeState } from './utils/storage';
 import type { ToastData } from './components/Toast';
 
 export default function App() {
-  const { user, loading } = useAuth();
+  const { user, isGuest, loading } = useAuth();
   if (loading) return <AuthLoading />;
-  if (!user) return <LoginScreen />;
-  return <PontoApp userId={user.uid} userEmail={user.email} />;
+  if (!user && !isGuest) return <LoginScreen />;
+  return <PontoApp userId={user?.uid ?? null} userEmail={user?.email ?? 'Convidado'} />;
 }
 
 interface PontoAppProps {
-  userId: string;
+  userId: string | null;
   userEmail: string | null;
 }
 
@@ -419,6 +419,7 @@ function PontoApp({ userId, userEmail }: PontoAppProps) {
         isDarkMode={state.isDarkMode}
         onToggleTheme={toggleDarkMode}
         onGoHome={handleGoHome}
+        onSignOut={signOut}
         currentEmployee={currentEmployee}
         onOpenSettings={setActiveTab}
         syncStatus={syncStatus}

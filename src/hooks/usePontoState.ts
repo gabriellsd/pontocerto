@@ -33,7 +33,7 @@ function hasPointData(state: AppState): boolean {
   return state.logs.length > 0 || state.shiftMarks.length > 0;
 }
 
-export function usePontoState(userId: string, onStorageFull?: () => void): PontoApi {
+export function usePontoState(userId: string | null, onStorageFull?: () => void): PontoApi {
   const [state, setState] = useState<AppState>(() => loadState());
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
@@ -44,6 +44,14 @@ export function usePontoState(userId: string, onStorageFull?: () => void): Ponto
   const firstSnapshotRef = useRef(true);
 
   useEffect(() => {
+    if (!userId) {
+      hydratedRef.current = true;
+      lastSyncedStateRef.current = null;
+      setSyncStatus('offline');
+      setLastSyncedAt(null);
+      return;
+    }
+
     hydratedRef.current = false;
     firstSnapshotRef.current = true;
     lastSyncedStateRef.current = null;
@@ -115,6 +123,7 @@ export function usePontoState(userId: string, onStorageFull?: () => void): Ponto
   }, [state, onStorageFull]);
 
   useEffect(() => {
+    if (!userId) return;
     if (!hydratedRef.current) return;
     if (lastSyncedStateRef.current && statesEqual(lastSyncedStateRef.current, state)) return;
 

@@ -3,7 +3,7 @@ import { Clock, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function LoginScreen() {
-  const { configured, signInWithGoogle } = useAuth();
+  const { configured, signInWithGoogle, continueAsGuest } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,6 +74,15 @@ export function LoginScreen() {
               </svg>
             )}
             Entrar com Google
+          </button>
+
+          <button
+            type="button"
+            onClick={continueAsGuest}
+            disabled={busy}
+            className="w-full h-10 text-slate-600 dark:text-slate-300 text-sm font-semibold rounded-xl transition border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700/60"
+          >
+            Entrar como convidado
           </button>
 
           <p className="text-[11px] text-center text-slate-400 dark:text-slate-500">
