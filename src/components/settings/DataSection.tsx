@@ -18,7 +18,7 @@ export function DataSection({
     <SettingsSection
       Icon={Database}
       title="Dados & Backup"
-      description="Gerir os dados armazenados localmente neste navegador"
+      description="Backup local e cópia de segurança (a nuvem sincroniza automaticamente)"
     >
       <div className="space-y-3">
         <Stat label="Total de registos de ponto" value={String(logsCount)} />
@@ -61,10 +61,9 @@ export function DataSection({
         </div>
 
         <div className="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 p-2.5 rounded-lg leading-snug">
-          <strong className="text-slate-700 dark:text-slate-200 font-semibold">Persistência:</strong> os dados são
-          gravados em <code className="font-mono">data/pontocerto.json</code> pelo servidor local, com
-          backup automático <code className="font-mono">.bak</code>. Mesmo assim, recomendamos exportar
-          um backup periodicamente.
+          <strong className="text-slate-700 dark:text-slate-200 font-semibold">Persistência:</strong> os dados
+          sincronizam no <strong>Firebase Firestore</strong> com a sua conta. Este navegador mantém uma cópia
+          em cache. Exporte um backup JSON periodicamente por segurança.
         </div>
       </div>
     </SettingsSection>

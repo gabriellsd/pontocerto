@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AuthLoading } from './components/auth/AuthLoading';
+import { LoginScreen } from './components/auth/LoginScreen';
+import { useAuth } from './contexts/AuthContext';
 import { defaultSettings } from './data/defaults';
 import { Header } from './components/Header';
 import { Tabs } from './components/Tabs';
@@ -33,6 +36,19 @@ import { normalizeState } from './utils/storage';
 import type { ToastData } from './components/Toast';
 
 export default function App() {
+  const { user, loading } = useAuth();
+  if (loading) return <AuthLoading />;
+  if (!user) return <LoginScreen />;
+  return <PontoApp userId={user.uid} userEmail={user.email} />;
+}
+
+interface PontoAppProps {
+  userId: string;
+  userEmail: string | null;
+}
+
+function PontoApp({ userId, userEmail }: PontoAppProps) {
+  const { signOut } = useAuth();
   const now = useClock();
   const webcam = useWebcam();
   const modal = useGenericModal();
@@ -56,7 +72,7 @@ export default function App() {
     replaceState,
     resetData,
     clearPoints,
-  } = usePontoState(() =>
+  } = usePontoState(userId, () =>
     modal.showAlert(
       'Espaço Esgotado',
       'Não foi possível guardar os dados no navegador. Considere exportar um backup e limpar registos antigos.',
@@ -456,6 +472,8 @@ export default function App() {
             holidays={state.holidays}
             settings={state.settings}
             isDarkMode={state.isDarkMode}
+            userEmail={userEmail}
+            onSignOut={signOut}
             onUpdateEmployee={updateEmployee}
             onUpdateSettings={updateSettings}
             onSetHoliday={setHoliday}

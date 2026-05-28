@@ -1,97 +1,98 @@
 # PontoCerto
 
-Sistema de Controlo de Ponto Digital — **Vite + React + TypeScript + Tailwind** no frontend, **Express + tsx** no backend com persistência em ficheiro JSON.
+Sistema de Controlo de Ponto Digital — **Vite + React + TypeScript + Tailwind** com sincronização na nuvem via **Firebase** (Auth + Firestore).
 
 ## Arquitetura
 
 ```
-┌────────────────┐    HTTP (proxy)    ┌────────────────┐    fs    ┌───────────────────┐
-│  React + Vite  │ ──── /api/state ──▶│  Express 5     │ ───────▶ │ data/             │
-│  localhost:5173│ ◀── JSON state ────│  localhost:3001│ ◀─────── │  pontocerto.json  │
-└────────────────┘                    └────────────────┘          └───────────────────┘
+┌────────────────┐     Firebase Auth      ┌────────────────┐
+│  React + Vite  │ ─────────────────────▶ │  Conta (e-mail) │
+│  (PC / mobile) │                        └────────────────┘
+└───────┬────────┘
+        │ Firestore (tempo real)
+        ▼
+┌────────────────────────────────────────┐
+│  users/{uid}/app/state  →  AppState    │
+└────────────────────────────────────────┘
+        │
+        ▼ cache local (offline)
+   localStorage `pontocerto_state`
 ```
 
-- O frontend faz GET inicial a `/api/state` para hidratação
-- Cada alteração faz PUT debounced (600 ms) para `/api/state`
-- O servidor grava de forma **atómica** (escrita em `.tmp` → rename) e mantém um backup automático em `pontocerto.json.bak`
-- Em caso de servidor indisponível, a app continua a funcionar localmente via `localStorage` (cache) e mostra badge **Offline** no header
+- Login com **e-mail e senha** (mesma conta no PC e no celular)
+- Cada alteração grava no **Firestore** (debounce 600 ms) e no **localStorage**
+- Ao abrir noutro dispositivo, os dados aparecem automaticamente
+- Se a nuvem falhar, o app continua com cache local (badge **Offline**)
+
+O servidor Express em `server/` é **opcional** (desenvolvimento local antigo); em produção use só o frontend + Firebase.
+
+## Configurar Firebase
+
+1. Crie um projeto em [Firebase Console](https://console.firebase.google.com/)
+2. Adicione uma app **Web** e copie a configuração
+3. Ative **Authentication → E-mail/Senha**
+4. Crie **Firestore Database** (modo produção)
+5. Em **Firestore → Regras**, publique o conteúdo de `firestore.rules` deste repositório
+6. Copie `.env.example` para `.env` e preencha:
+
+```env
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
+```
+
+### Vercel
+
+No painel do projeto → **Settings → Environment Variables**, adicione as mesmas variáveis `VITE_FIREBASE_*` e faça um novo deploy.
 
 ## Como correr
 
 ```bash
 npm install
+npm run dev          # só frontend (5173) — precisa do .env com Firebase
+npm run build        # build de produção
+npm run preview      # pré-visualizar build
+```
 
-# arranca frontend (5173) + servidor (3001) em paralelo
-npm run dev
+Para o servidor local antigo (opcional):
 
-# apenas o frontend
-npm run dev:client
-
-# apenas o servidor
-npm run dev:server     # com auto-reload
-npm run start:server   # sem watch (produção local)
-
-# build de produção do frontend
-npm run build
+```bash
+npm run dev:server   # API em :3001 + ficheiro data/pontocerto.json
 ```
 
 ## Estrutura
 
 ```
-Relogio Ponto/
-├── data/                          # criada automaticamente
-│   └── pontocerto.json            # base de dados (gitignored)
-├── server/
-│   ├── index.ts                   # Express + endpoints
-│   └── tsconfig.json
-├── src/                           # frontend React
-│   ├── api/
-│   │   └── client.ts              # fetch wrapper para /api
-│   ├── components/
-│   ├── data/defaults.ts
-│   ├── hooks/usePontoState.ts     # sync com servidor + cache local
-│   ├── utils/
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── index.css
-├── index.html
-├── vite.config.ts                 # proxy /api → :3001
-├── tailwind.config.js
-└── package.json
+src/
+├── firebase/          # config + sync Firestore
+├── contexts/          # AuthProvider
+├── components/auth/   # Login
+├── hooks/usePontoState.ts
+└── ...
+firestore.rules        # regras de segurança (copiar para o Firebase)
+.env.example
 ```
-
-## Endpoints da API
-
-| Método | Rota          | Descrição                                                  |
-| ------ | ------------- | ---------------------------------------------------------- |
-| GET    | `/api/health` | Healthcheck. Devolve `{ ok: true, dataFile }`              |
-| GET    | `/api/state`  | Lê o ficheiro `data/pontocerto.json` e devolve em JSON     |
-| PUT    | `/api/state`  | Substitui o estado (escrita atómica + backup)              |
 
 ## Funcionalidades
 
-- 4 marcações por dia: Entrada, Saída/Retorno Almoço, Saída Final
-- Validação automática da ordem das marcações
-- Painel com estatísticas em tempo real
-- Histórico mensal filtrável + exportação CSV
-- Backup completo em JSON (export/import via UI)
-- Câmara WebRTC para foto de auditoria
-- Geolocalização com **reverse geocoding** (OpenStreetMap Nominatim)
-- Tema claro/escuro
-- Tab **Configurações** com Perfil, Jornada, Preferências e Dados
-- Indicador de estado de sincronização (Sincronizado / Offline / A sincronizar)
+- 4 marcações por dia, plantão, feriados, folha 21→20
+- Histórico, calculadora de remuneração, exportação CSV/PDF
+- Sincronização multi-dispositivo (Firebase)
+- Definições com menu lateral (Conta, Perfil, Jornada, etc.)
+- Backup JSON export/import
 
-## Onde estão os dados
+## Migrar dados do PC para a nuvem
 
-O ficheiro `data/pontocerto.json` é criado automaticamente na primeira execução do servidor com o estado inicial. Pode editá-lo manualmente — basta reiniciar o servidor.
-
-- Backup automático: `data/pontocerto.json.bak` (cópia da última versão antes de cada gravação)
-- Gravação atómica: protege contra corrupção em caso de falha
-
-A pasta `data/` está no `.gitignore` para não versionar dados pessoais.
+1. No PC, com os pontos já no app (cache local), crie conta em **Entrar / Registar**
+2. Na primeira sessão, se existirem dados locais e a nuvem estiver vazia, o app **envia automaticamente** para o Firestore
+3. No celular, entre com o **mesmo e-mail e senha**
 
 ## Variáveis de ambiente
 
-| Variável | Default | Descrição                            |
-| -------- | ------- | ------------------------------------ |
-| `PORT`   | `3001`  | Porta onde o servidor Express escuta |
+| Variável | Descrição |
+| -------- | --------- |
+| `VITE_FIREBASE_*` | Configuração do projeto Firebase (obrigatório) |
+| `PORT` | Porta do servidor Express local (opcional, default `3001`) |

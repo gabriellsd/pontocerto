@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppSettings, AppState, Employee, Holiday, PointLog, ShiftMark } from '../types';
+import { pushRemoteState, statesEqual, subscribeRemoteState } from '../firebase/stateSync';
 import { initialState } from '../data/defaults';
 import { loadState, saveState } from '../utils/storage';
-import { fetchStateFromServer, pushStateToServer } from '../api/client';
 
 export type SyncStatus = 'loading' | 'syncing' | 'synced' | 'offline' | 'error';
 
@@ -24,44 +24,90 @@ export interface PontoApi {
   removeShiftMark: (employeeId: number, date: string) => void;
   replaceState: (next: AppState) => void;
   resetData: () => void;
-  /** Limpa APENAS registos de ponto e marcações de plantão. Mantém configurações, feriados e colaboradores. */
   clearPoints: () => void;
 }
 
 const SAVE_DEBOUNCE_MS = 600;
 
-export function usePontoState(onStorageFull?: () => void): PontoApi {
+function hasPointData(state: AppState): boolean {
+  return state.logs.length > 0 || state.shiftMarks.length > 0;
+}
+
+export function usePontoState(userId: string, onStorageFull?: () => void): PontoApi {
   const [state, setState] = useState<AppState>(() => loadState());
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const hydratedRef = useRef(false);
   const saveTimerRef = useRef<number | null>(null);
-  // Referência ao último state que foi sincronizado (ou recebido do) servidor.
-  // Permite saltar o push redundante imediatamente após hidratação.
   const lastSyncedStateRef = useRef<AppState | null>(null);
+  const pushingRef = useRef(false);
+  const firstSnapshotRef = useRef(true);
 
   useEffect(() => {
+    hydratedRef.current = false;
+    firstSnapshotRef.current = true;
+    lastSyncedStateRef.current = null;
+    setSyncStatus('loading');
+
     let cancelled = false;
-    (async () => {
-      try {
-        const remote = await fetchStateFromServer();
+
+    const unsub = subscribeRemoteState(
+      userId,
+      async (remote) => {
         if (cancelled) return;
+
+        if (firstSnapshotRef.current) {
+          firstSnapshotRef.current = false;
+          const local = loadState();
+
+          if (remote) {
+            lastSyncedStateRef.current = remote;
+            setState(remote);
+          } else if (hasPointData(local)) {
+            try {
+              await pushRemoteState(userId, local);
+              lastSyncedStateRef.current = local;
+              setState(local);
+            } catch (err) {
+              console.warn('Falha ao enviar dados locais para a nuvem:', err);
+              lastSyncedStateRef.current = local;
+              setState(local);
+              setSyncStatus('offline');
+              hydratedRef.current = true;
+              return;
+            }
+          } else {
+            lastSyncedStateRef.current = local;
+            setState(local);
+          }
+
+          hydratedRef.current = true;
+          setSyncStatus('synced');
+          setLastSyncedAt(new Date());
+          return;
+        }
+
+        if (!remote || pushingRef.current) return;
+        if (lastSyncedStateRef.current && statesEqual(lastSyncedStateRef.current, remote)) return;
+
         lastSyncedStateRef.current = remote;
         setState(remote);
         setSyncStatus('synced');
         setLastSyncedAt(new Date());
-      } catch (err) {
-        console.warn('Servidor indisponível, a usar cache local:', err);
+      },
+      (err) => {
+        console.warn('Firestore indisponível, a usar cache local:', err);
         if (cancelled) return;
         setSyncStatus('offline');
-      } finally {
         hydratedRef.current = true;
       }
-    })();
+    );
+
     return () => {
       cancelled = true;
+      unsub();
     };
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     const ok = saveState(state);
@@ -70,8 +116,7 @@ export function usePontoState(onStorageFull?: () => void): PontoApi {
 
   useEffect(() => {
     if (!hydratedRef.current) return;
-    // Skip redundant push do estado que acabámos de receber do servidor.
-    if (lastSyncedStateRef.current === state) return;
+    if (lastSyncedStateRef.current && statesEqual(lastSyncedStateRef.current, state)) return;
 
     if (saveTimerRef.current !== null) {
       window.clearTimeout(saveTimerRef.current);
@@ -79,14 +124,17 @@ export function usePontoState(onStorageFull?: () => void): PontoApi {
     setSyncStatus((prev) => (prev === 'offline' ? prev : 'syncing'));
 
     saveTimerRef.current = window.setTimeout(async () => {
+      pushingRef.current = true;
       try {
-        await pushStateToServer(state);
+        await pushRemoteState(userId, state);
         lastSyncedStateRef.current = state;
         setSyncStatus('synced');
         setLastSyncedAt(new Date());
       } catch (err) {
-        console.warn('Falha a sincronizar com servidor:', err);
+        console.warn('Falha a sincronizar com Firebase:', err);
         setSyncStatus('offline');
+      } finally {
+        pushingRef.current = false;
       }
     }, SAVE_DEBOUNCE_MS);
 
@@ -95,7 +143,7 @@ export function usePontoState(onStorageFull?: () => void): PontoApi {
         window.clearTimeout(saveTimerRef.current);
       }
     };
-  }, [state]);
+  }, [state, userId]);
 
   useEffect(() => {
     const root = document.documentElement;

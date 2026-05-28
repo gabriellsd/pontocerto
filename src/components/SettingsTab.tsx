@@ -4,6 +4,7 @@ import {
   CalendarOff,
   Clock,
   Database,
+  Mail,
   Settings,
   SlidersHorizontal,
   Upload,
@@ -11,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import type { AppSettings, Employee, Holiday, PointLog } from '../types';
+import { AccountSection } from './settings/AccountSection';
 import { ProfileSection } from './settings/ProfileSection';
 import { ScheduleSection } from './settings/ScheduleSection';
 import { PaySection } from './settings/PaySection';
@@ -25,6 +27,8 @@ interface SettingsTabProps {
   holidays: Holiday[];
   settings: AppSettings;
   isDarkMode: boolean;
+  userEmail: string | null;
+  onSignOut: () => Promise<void>;
   onUpdateEmployee: (id: number, patch: Partial<Omit<Employee, 'id'>>) => void;
   onUpdateSettings: (patch: Partial<AppSettings>) => void;
   onSetHoliday: (date: string, label: string) => void;
@@ -38,9 +42,18 @@ interface SettingsTabProps {
   onResultToast: (message: string, kind: 'green' | 'red' | 'yellow') => void;
 }
 
-type SettingsPanelId = 'profile' | 'schedule' | 'pay' | 'preferences' | 'holidays' | 'import' | 'data';
+type SettingsPanelId =
+  | 'account'
+  | 'profile'
+  | 'schedule'
+  | 'pay'
+  | 'preferences'
+  | 'holidays'
+  | 'import'
+  | 'data';
 
 const SETTINGS_MENU: { id: SettingsPanelId; label: string; Icon: LucideIcon }[] = [
+  { id: 'account', label: 'Conta', Icon: Mail },
   { id: 'profile', label: 'Perfil', Icon: UserCircle },
   { id: 'schedule', label: 'Jornada', Icon: Clock },
   { id: 'pay', label: 'Remuneração', Icon: Banknote },
@@ -99,6 +112,9 @@ export function SettingsTab(props: SettingsTabProps) {
         </nav>
 
         <div className="flex-1 min-w-0 lg:p-3 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+          {panel === 'account' && (
+            <AccountSection userEmail={props.userEmail} onSignOut={props.onSignOut} />
+          )}
           {panel === 'profile' && (
             <ProfileSection
               employee={props.employee}

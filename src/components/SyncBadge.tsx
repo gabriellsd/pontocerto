@@ -44,7 +44,7 @@ export function SyncBadge({ status, lastSyncedAt }: SyncBadgeProps) {
     status === 'synced' && lastSyncedAt
       ? `Última sincronização: ${lastSyncedAt.toLocaleTimeString('pt-PT')}`
       : status === 'offline'
-      ? 'Servidor indisponível — a usar cache local'
+      ? 'Nuvem indisponível — a usar cache local neste aparelho'
       : p.label;
 
   return (
