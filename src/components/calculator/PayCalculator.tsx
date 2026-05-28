@@ -137,24 +137,6 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-800 dark:text-white">Calculadora de pagamento</h3>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {flatShift ? (
-                <>
-                  {samePlantaoRate ? (
-                    <>Plantão {formatBRL(settings.shiftFlatRate)}/dia (sáb-dom)</>
-                  ) : (
-                    <>
-                      Plantão {formatBRL(settings.shiftFlatRate)}/dia · Dom{' '}
-                      {formatBRL(settings.shiftWeekendFlatRate)}
-                    </>
-                  )}
-                  {' · '}sábado com ponto = H.E. + plantão
-                </>
-              ) : (
-                'Estimativa de hora extra e plantão'
-              )}
-              {hourlyRate > 0 && <> · hora {formatBRL(hourlyRate)}</>}
-            </p>
           </div>
         </div>
 
@@ -201,9 +183,6 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
         </div>
       ) : (
         <div className="space-y-3">
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">
-            Ative um ou os dois tipos — o total soma hora extra e plantão juntos.
-          </p>
           <div className="flex flex-wrap gap-2">
             <KindBtn
               active={includeOvertime}
@@ -218,15 +197,7 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
           </div>
 
           {includeOvertime || (includeShift && !flatShift) ? (
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                {includeOvertime && includeShift && !flatShift
-                  ? 'Horas (hora extra e plantão)'
-                  : includeOvertime
-                  ? 'Hora extra — tempo'
-                  : 'Plantão — tempo'}
-              </span>
-              <div className="grid grid-cols-2 sm:max-w-xs gap-2">
+            <div className="grid grid-cols-2 sm:max-w-xs gap-2">
                 <label className="block space-y-0.5">
                   <span className="text-[10px] text-slate-500 dark:text-slate-400">Horas</span>
                   <input
@@ -251,24 +222,13 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
                     className="ponto-input"
                   />
                 </label>
-              </div>
             </div>
           ) : null}
 
           {includeShift && flatShift ? (
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                Plantão — dias
-              </span>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-snug">
-                {samePlantaoRate
-                  ? 'Plantão de sábado e domingo usa o mesmo valor por dia; feriados em dia útil contam à parte.'
-                  : 'Dia útil, fim de semana e feriado podem ter valores diferentes — como no modo Período.'}{' '}
-                Ao ativar plantão, os dias do período filtrado são preenchidos automaticamente.
-              </p>
-              <div
-                className={`grid grid-cols-1 gap-2 ${samePlantaoRate ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}
-              >
+            <div
+              className={`grid grid-cols-1 gap-2 ${samePlantaoRate ? 'sm:grid-cols-2' : 'sm:grid-cols-3'}`}
+            >
                 {samePlantaoRate ? (
                   <ShiftDayField
                     label="Plantão (sáb-dom)"
@@ -298,7 +258,6 @@ export function PayCalculator({ settings, employee, logsByDate, shiftMarks, holi
                   value={manualShiftHoliday}
                   onChange={setManualShiftHoliday}
                 />
-              </div>
             </div>
           ) : null}
 
